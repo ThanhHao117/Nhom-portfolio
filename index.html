@@ -16,6 +16,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&display=swap" rel="stylesheet">
     
+    <!-- WOW EFFECT LIBRARIES -->
+    <!-- Typed.js for Typing Effect -->
+    <script src="https://unpkg.com/typed.js@2.0.16/dist/typed.umd.js"></script>
+    <!-- Tone.js for Sound Effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    
     <style>
         /* Custom Styles & Gundam Theme */
         body {
@@ -83,15 +89,39 @@
             -webkit-text-fill-color: transparent;
         }
 
-        .btn-download {
+        .btn-download, .btn-cv {
              clip-path: polygon(0 15px, 15px 0, 100% 0, 100% 100%, 15px 100%, 0 calc(100% - 15px));
         }
+
+        /* Avatar Frame */
+        .avatar-frame {
+            position: relative; padding: 5px; border-radius: 50%;
+        }
+        .avatar-frame::before, .avatar-frame::after {
+            content: ''; position: absolute; border-radius: 50%; inset: 0;
+        }
+        .avatar-frame::before { border: 2px solid currentColor; opacity: 0.4; }
+        .avatar-frame::after {
+            border: 3px solid transparent; border-top-color: currentColor;
+            animation: spin 4s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .avatar-frame img {
+            position: relative; z-index: 1; background-color: #0a0f1f;
+        }
         
-        /* Styles for Skill Modal */
-        #skill-modal {
+        /* Modal Styles */
+        .modal {
             background-color: rgba(0,0,0,0.7);
             backdrop-filter: blur(5px);
         }
+
+        /* Typing cursor for Typed.js */
+        .typed-cursor {
+            font-size: 2.5rem; /* Match font size of h1 */
+            color: #2a7aed;
+        }
+        
         .skill-item {
             border: 1px solid #4a5568;
             transition: all 0.2s ease;
@@ -113,7 +143,6 @@
     <!-- Video Background -->
     <div id="video-overlay"></div>
     <video autoplay loop muted playsinline id="video-bg">
-        <!-- HƯỚNG DẪN: Thay đổi src bên dưới thành './videos/background.mp4' -->
         <source src="video/Background.mp4" type="video/mp4">
         Trình duyệt của bạn không hỗ trợ video.
     </video>
@@ -121,16 +150,16 @@
     <!-- HEADER -->
     <header class="bg-[#0a0f1f]/80 backdrop-blur-sm sticky top-0 z-50 border-b border-sky-500/30">
         <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <a href="#home" class="text-2xl font-bold text-white hover:text-sky-400 transition-colors tracking-widest">
+            <a href="#home" class="interactive-sound text-2xl font-bold text-white hover:text-sky-400 transition-colors tracking-widest">
                 <i class="fa-solid fa-robot mr-2"></i> ĐỘI <span class="gundam-gradient-text">8386</span>
             </a>
             <div class="hidden md:flex space-x-6 text-gray-300 font-semibold">
-                <a href="#home" class="hover:text-sky-400 transition-colors">Trang Chủ</a>
-                <a href="#hao" class="hover:text-sky-400 transition-colors">Thanh Hào</a>
-                <a href="#loc" class="hover:text-sky-400 transition-colors">Hoàng Lộc</a>
-                <a href="#thinh" class="hover:text-sky-400 transition-colors">Thái Thịnh</a>
-                <a href="#dinh" class="hover:text-sky-400 transition-colors">Văn Đình</a>
-                <a href="#thang" class="hover:text-sky-400 transition-colors">Quốc Thắng</a>
+                <a href="#home" class="interactive-sound hover:text-sky-400 transition-colors">Trang Chủ</a>
+                <a href="#hao" class="interactive-sound hover:text-sky-400 transition-colors">Thanh Hào</a>
+                <a href="https://hoang-loc.netlify.app/" target="_blank" class="interactive-sound hover:text-sky-400 transition-colors">Hoàng Lộc</a>
+                <a href="https://hg8h3pbz-5500.asse.devtunnels.ms/LETHAITHINH/index1.html" target="_blank" class="interactive-sound hover:text-sky-400 transition-colors">Thái Thịnh</a>
+                <a href="https://hg8h3pbz-5500.asse.devtunnels.ms/" target="_blank" class="interactive-sound hover:text-sky-400 transition-colors">Văn Đình</a>
+                <a href="#" target="_blank" class="interactive-sound hover:text-sky-400 transition-colors">Quốc Thắng</a>
             </div>
         </nav>
     </header>
@@ -142,7 +171,7 @@
                 <div class="w-full h-64 md:h-[450px] rounded-lg shadow-2xl mb-8 border-2 border-sky-500/50 p-2">
                     <img src="image/AnhBiaTC.jpg" alt="Ảnh bìa của nhóm" class="w-full h-full object-tain">
                 </div>
-                <h1 class="text-4xl md:text-5xl font-bold text-white mb-4 tracking-wider">DANH SÁCH THÀNH VIÊN</h1>
+                <h1 id="typing-title" class="text-4xl md:text-5xl font-bold text-white mb-4 tracking-wider h-20"></h1>
                 <p class="text-lg text-gray-400 max-w-3xl mx-auto leading-relaxed">
                     Tập hợp những thành viên ưu tú, mỗi người một kỹ năng, cùng nhau kiến tạo những sản phẩm đột phá.
                 </p>
@@ -150,30 +179,40 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8">
                 <!-- Member Cards -->
-                <a href="#hao" class="group block tech-card p-6 text-center hover:-translate-y-2">
-                    <img src="image/Hao.jpg" alt="Trần Thanh Hào" class="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-gray-600 group-hover:border-sky-400 transition-all duration-300 object-cover">
+                <a href="#hao" class="interactive-sound group block tech-card p-6 text-center hover:-translate-y-2 text-sky-400">
+                    <div class="avatar-frame w-32 h-32 mx-auto mb-4">
+                        <img src="image/Hao.jpg" alt="Trần Thanh Hào" class="w-full h-full rounded-full object-cover">
+                    </div>
                     <h3 class="text-xl font-bold text-white">Trần Thanh Hào</h3>
-                    <p class="text-sky-400 font-semibold">TRƯỞNG NHÓM</p>
+                    <p class="font-semibold">TRƯỞNG NHÓM</p>
                 </a>
-                 <a href="#loc" class="group block tech-card p-6 text-center hover:-translate-y-2">
-                    <img src="image/Loc.jpg" alt="Phạm Hoàng Lộc" class="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-gray-600 group-hover:border-red-500 transition-all duration-300 object-cover">
+                 <a href="https://hoang-loc.netlify.app/" target="_blank" class="interactive-sound group block tech-card p-6 text-center hover:-translate-y-2 text-red-500">
+                    <div class="avatar-frame w-32 h-32 mx-auto mb-4">
+                        <img src="image/Loc.jpg" alt="Phạm Hoàng Lộc" class="w-full h-full rounded-full object-cover">
+                    </div>
                     <h3 class="text-xl font-bold text-white">Phạm Hoàng Lộc</h3>
-                    <p class="text-red-500 font-semibold">THÀNH VIÊN</p>
+                    <p class="font-semibold">THÀNH VIÊN</p>
                 </a>
-                <a href="#thinh" class="group block tech-card p-6 text-center hover:-translate-y-2">
-                    <img src="image/Thinh.png" alt="Lê Thái Thịnh" class="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-gray-600 group-hover:border-green-500 transition-all duration-300 object-cover">
+                <a href="https://hg8h3pbz-5500.asse.devtunnels.ms/LETHAITHINH/index1.html" target="_blank" class="interactive-sound group block tech-card p-6 text-center hover:-translate-y-2 text-green-500">
+                    <div class="avatar-frame w-32 h-32 mx-auto mb-4">
+                        <img src="image/Thinh.png" alt="Lê Thái Thịnh" class="w-full h-full rounded-full object-cover">
+                    </div>
                     <h3 class="text-xl font-bold text-white">Lê Thái Thịnh</h3>
-                    <p class="text-green-500 font-semibold">THÀNH VIÊN</p>
+                    <p class="font-semibold">THÀNH VIÊN</p>
                 </a>
-                <a href="#dinh" class="group block tech-card p-6 text-center hover:-translate-y-2">
-                    <img src="image/Dinh.png" alt="Trần Văn Đình" class="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-gray-600 group-hover:border-yellow-400 transition-all duration-300 object-cover">
+                <a href="https://hg8h3pbz-5500.asse.devtunnels.ms/" target="_blank" class="interactive-sound group block tech-card p-6 text-center hover:-translate-y-2 text-yellow-400">
+                    <div class="avatar-frame w-32 h-32 mx-auto mb-4">
+                        <img src="image/Dinh.png" alt="Trần Văn Đình" class="w-full h-full rounded-full object-cover">
+                    </div>
                     <h3 class="text-xl font-bold text-white">Trần Văn Đình</h3>
-                    <p class="text-yellow-400 font-semibold">THÀNH VIÊN</p>
+                    <p class="font-semibold">THÀNH VIÊN</p>
                 </a>
-                <a href="#thang" class="group block tech-card p-6 text-center hover:-translate-y-2">
-                    <img src="image/Thắng.jpg" alt="Lê Quốc Thắng" class="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-gray-600 group-hover:border-purple-500 transition-all duration-300 object-cover">
+                <a href="#" target="_blank" class="interactive-sound group block tech-card p-6 text-center hover:-translate-y-2 text-purple-500">
+                    <div class="avatar-frame w-32 h-32 mx-auto mb-4">
+                        <img src="image/Thắng.jpg" alt="Lê Quốc Thắng" class="w-full h-full rounded-full object-cover">
+                    </div>
                     <h3 class="text-xl font-bold text-white">Lê Quốc Thắng</h3>
-                    <p class="text-purple-500 font-semibold">THÀNH VIÊN</p>
+                    <p class="font-semibold">THÀNH VIÊN</p>
                 </a>
             </div>
         </section>
@@ -181,8 +220,8 @@
         <!-- PORTFOLIO: TRẦN THANH HÀO -->
         <section id="hao" class="page">
             <div class="flex flex-col md:flex-row items-center gap-8 md:gap-12 tech-card p-8">
-                <div class="flex-shrink-0 w-48 h-48 md:w-60 md:h-60">
-                     <img src="image/Hao.jpg" alt="Trần Thanh Hào" class="w-full h-full rounded-full object-cover border-8 border-gray-700 shadow-lg">
+                <div class="avatar-frame w-48 h-48 md:w-60 md:h-60 flex-shrink-0 text-sky-400">
+                     <img src="image/Hao.jpg" alt="Trần Thanh Hào" class="w-full h-full rounded-full object-cover shadow-lg">
                 </div>
                 <div>
                     <h1 class="text-4xl md:text-5xl font-bold text-white">Trần Thanh Hào</h1>
@@ -191,12 +230,12 @@
                         Hệ thống sẵn sàng. Nhiệm vụ của tôi là dẫn dắt đội và kiến tạo những giải pháp công nghệ đột phá.
                     </p>
                     <div class="flex items-center space-x-4 mb-6">
-                        <a href="#" class="text-gray-400 hover:text-sky-400 transition-colors text-2xl"><i class="fa-brands fa-github"></i></a>
-                        <a href="#" class="text-gray-400 hover:text-sky-400 transition-colors text-2xl"><i class="fa-brands fa-facebook"></i></a>
-                        <a href="#" class="text-gray-400 hover:text-sky-400 transition-colors text-2xl"><i class="fa-brands fa-linkedin"></i></a>
+                        <a href="#" class="interactive-sound text-gray-400 hover:text-sky-400 transition-colors text-2xl"><i class="fa-brands fa-github"></i></a>
+                        <a href="#" class="interactive-sound text-gray-400 hover:text-sky-400 transition-colors text-2xl"><i class="fa-brands fa-facebook"></i></a>
+                        <a href="#" class="interactive-sound text-gray-400 hover:text-sky-400 transition-colors text-2xl"><i class="fa-brands fa-linkedin"></i></a>
                     </div>
-                    <a href="cv/hao-cv.pdf" download class="btn-download inline-block bg-sky-600 text-white font-bold py-3 px-8 hover:bg-sky-500 transition-all duration-300 transform hover:scale-105">
-                        <i class="fa-solid fa-download mr-2"></i> TẢI CV
+                    <a href="cv/hao-cv.html" target="_blank" class="interactive-sound btn-cv inline-block bg-sky-600 text-white font-bold py-3 px-8 hover:bg-sky-500 transition-all duration-300 transform hover:scale-105">
+                        <i class="fa-solid fa-id-badge mr-2"></i> XEM CV
                     </a>
                 </div>
             </div>
@@ -224,338 +263,63 @@
                            <span data-skill-id="html" class="skill-badge bg-gray-800 text-gray-200 font-semibold px-4 py-2 flex items-center gap-2"><i class="fa-brands fa-html5 text-xl text-orange-500"></i> HTML5</span>
                            <span data-skill-id="css" class="skill-badge bg-gray-800 text-gray-200 font-semibold px-4 py-2 flex items-center gap-2"><i class="fa-brands fa-css3-alt text-xl text-sky-500"></i> CSS3</span>
                         </div>
-                        <button data-target="hao-skills-list" class="open-skill-modal-btn w-full text-left bg-sky-900/50 p-3 rounded-md hover:bg-sky-800/50 transition-colors flex justify-between items-center">
+                        <button data-target="hao-skills-list" class="interactive-sound open-skill-modal-btn w-full text-left bg-sky-900/50 p-3 rounded-md hover:bg-sky-800/50 transition-colors flex justify-between items-center">
                             <span>Chỉnh sửa kỹ năng</span>
                             <i class="fa-solid fa-pencil"></i>
                         </button>
                     </div>
                 </div>
                 <div class="lg:col-span-2 space-y-8">
-                    <div class="tech-card p-6">
+                     <div class="tech-card p-6">
                         <h3 class="text-2xl font-bold text-white mb-4"><i class="fa-solid fa-bullseye mr-2 gundam-gradient-text"></i>Dự Án Đã Thực Hiện</h3>
                         <div class="space-y-6">
-                            <div class="border-l-4 border-sky-500 pl-4">
-                                <h4 class="text-lg font-bold text-white">Dự án: PORTFOLIO NHÓM</h4>
-                                <p class="text-sm text-gray-400 mb-2">Xây dựng trang web giới thiệu các thành viên và sản phẩm của nhóm.</p>
-                                <a href="#" class="text-sky-400 hover:text-red-500 transition-colors">Xem chi tiết &rarr;</a>
+                            <div data-project-id="portfolio" class="interactive-sound project-item cursor-pointer border-l-4 border-sky-500 pl-4 transition-all duration-300 hover:border-red-500">
+                                <h4 class="text-lg font-bold text-white">Xây dựng trang web giới thiệu các thành viên và sản phẩm của nhóm</h4>
+                                <p class="text-sm text-gray-400 mb-2">Xem chi tiết &rarr;</p>
                             </div>
                         </div>
                     </div>
                     <div class="tech-card p-6">
-                        <h3 class="text-2xl font-bold text-white mb-4"><i class="fa-solid fa-heart mr-2 gundam-gradient-text"></i>Lời Cảm Ơn</h3>
-                        <p class="text-gray-300 leading-relaxed">
-                            Để hoàn thành được trang web portfolio này, chúng em xin gửi lời cảm ơn sâu sắc nhất đến giảng viên hướng dẫn, thầy <strong>Đức Trần Thịnh Mạnh</strong>. Thầy không chỉ truyền đạt những kiến thức nền tảng quý báu về Thiết kế Web mà còn luôn tận tình chỉ dẫn, giải đáp mọi thắc mắc và định hướng cho chúng em trong suốt quá trình thực hiện dự án. Sự nhiệt huyết và chuyên môn của thầy chính là nguồn động lực lớn để chúng em vượt qua khó khăn và hoàn thiện sản phẩm này.
-                        </p>
+                        <h3 class="text-2xl font-bold text-white mb-4"><i class="fa-solid fa-camera-retro mr-2 gundam-gradient-text"></i>Thư Viện Hình Ảnh</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <img src="image/Anh1.jpg" alt="Ảnh 1" class="rounded-lg object-cover w-full h-full aspect-square">
+                            <img src="image/Anh2.jpg" alt="Ảnh 2" class="rounded-lg object-cover w-full h-full aspect-square">
+                            <img src="image/Anh3.jpg" alt="Ảnh 3" class="rounded-lg object-cover w-full h-full aspect-square">
+                            <img src="image/Anh4.jpg" alt="Ảnh 4" class="rounded-lg object-cover w-full h-full aspect-square">
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
-        
-        <!-- PORTFOLIO: PHẠM HOÀNG LỘC -->
-        <section id="loc" class="page">
-             <div class="flex flex-col md:flex-row items-center gap-8 md:gap-12 tech-card p-8">
-                <div class="flex-shrink-0 w-48 h-48 md:w-60 md:h-60">
-                     <img src="image/Loc.jpg" alt="Phạm Hoàng Lộc" class="w-full h-full rounded-full object-cover border-8 border-gray-700 shadow-lg">
-                </div>
-                <div>
-                    <h1 class="text-4xl md:text-5xl font-bold text-white">Phạm Hoàng Lộc</h1>
-                    <p class="text-xl font-medium text-red-500 mb-4">Thành viên | Chuyên gia Frontend</p>
-                    <p class="text-gray-400 mb-4">
-                       Mô tả ngắn về bản thân hoặc một câu nói tâm đắc.
-                    </p>
-                    <div class="flex items-center space-x-4 mb-6">
-                        <a href="#" class="text-gray-400 hover:text-red-500 transition-colors text-2xl"><i class="fa-brands fa-github"></i></a>
-                        <a href="#" class="text-gray-400 hover:text-red-500 transition-colors text-2xl"><i class="fa-brands fa-facebook"></i></a>
-                    </div>
-                    <a href="cv/loc-cv.pdf" download class="btn-download inline-block bg-red-600 text-white font-bold py-3 px-8 hover:bg-red-500 transition-all duration-300">
-                        <i class="fa-solid fa-download mr-2"></i> TẢI CV
-                    </a>
-                </div>
-            </div>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-12">
-                <div class="lg:col-span-1 space-y-8">
-                    <div class="tech-card p-6">
-                        <h3 class="text-2xl font-bold text-white mb-4"><i class="fa-solid fa-id-card mr-2 text-red-500"></i>Thông Tin Cá Nhân</h3>
-                        <ul class="space-y-2 text-gray-300">
-                           <li><strong>Mã số SV:</strong> <span>24050123</span></li>
-                           <li><strong>Quê quán:</strong> <span>TP. Hồ Chí Minh</span></li>
-                           <li><strong>Liên lạc:</strong> <span>24050123@student.bdu.edu.vn</span></li>
-                        </ul>
-                    </div>
-                    <div class="tech-card p-6">
-                        <h3 class="text-2xl font-bold text-white mb-4"><i class="fa-solid fa-grin-stars mr-2 text-red-500"></i>Sở Thích</h3>
-                        <div class="flex flex-wrap gap-2">
-                           <span class="bg-gray-700/50 border border-gray-600 text-gray-300 px-3 py-1 rounded-full text-sm">Nghe nhạc</span>
-                           <span class="bg-gray-700/50 border border-gray-600 text-gray-300 px-3 py-1 rounded-full text-sm">Gym</span>
-                        </div>
-                    </div>
-                     <div class="tech-card p-6">
-                        <h3 class="text-2xl font-bold text-white mb-4"><i class="fa-solid fa-gears mr-2 text-red-500"></i>Chuyên Môn & Kỹ Năng</h3>
-                         <div id="loc-skills-list" class="flex flex-wrap gap-3 mb-4 min-h-[40px]">
-                             <span data-skill-id="sql" class="skill-badge bg-gray-800 text-gray-200 font-semibold px-4 py-2 flex items-center gap-2"><i class="fa-solid fa-database text-xl text-sky-400"></i> SQL</span>
-                           <span data-skill-id="git" class="skill-badge bg-gray-800 text-gray-200 font-semibold px-4 py-2 flex items-center gap-2"><i class="fa-brands fa-git-alt text-xl text-orange-600"></i> Git</span>
-                         </div>
-                        <button data-target="loc-skills-list" class="open-skill-modal-btn w-full text-left bg-red-900/50 p-3 rounded-md hover:bg-red-800/50 transition-colors flex justify-between items-center">
-                            <span>Chỉnh sửa kỹ năng</span>
-                            <i class="fa-solid fa-pencil"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="lg:col-span-2 space-y-8">
-                     <div class="tech-card p-6">
-                        <h3 class="text-2xl font-bold text-white mb-4"><i class="fa-solid fa-bullseye mr-2 text-red-500"></i>Dự Án Đã Thực Hiện</h3>
-                        <div class="space-y-6">
-                            <div class="border-l-4 border-sky-500 pl-4">
-                                <h4 class="text-lg font-bold text-white">Dự án: PORTFOLIO NHÓM</h4>
-                                <p class="text-sm text-gray-400 mb-2">Xây dựng trang web giới thiệu các thành viên và sản phẩm của nhóm.</p>
-                                <a href="#" class="text-sky-400 hover:text-red-500 transition-colors">Xem chi tiết &rarr;</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="tech-card p-6">
-                        <h3 class="text-2xl font-bold text-white mb-4"><i class="fa-solid fa-heart mr-2 text-red-500"></i>Lời Cảm Ơn</h3>
-                        <p class="text-gray-300 leading-relaxed">
-                           Để hoàn thành được trang web portfolio này, chúng em xin gửi lời cảm ơn sâu sắc nhất đến giảng viên hướng dẫn, thầy <strong>Đức Trần Thịnh Mạnh</strong>. Thầy không chỉ truyền đạt những kiến thức nền tảng quý báu về Thiết kế Web mà còn luôn tận tình chỉ dẫn, giải đáp mọi thắc mắc và định hướng cho chúng em trong suốt quá trình thực hiện dự án. Sự nhiệt huyết và chuyên môn của thầy chính là nguồn động lực lớn để chúng em vượt qua khó khăn và hoàn thiện sản phẩm này.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- PORTFOLIO: LÊ THÁI THỊNH -->
-        <section id="thinh" class="page">
-              <div class="flex flex-col md:flex-row items-center gap-8 md:gap-12 tech-card p-8">
-                <div class="flex-shrink-0 w-48 h-48 md:w-60 md:h-60">
-                     <img src="image/Thinh.png" alt="Lê Thái Thịnh" class="w-full h-full rounded-full object-cover border-8 border-gray-700 shadow-lg">
-                </div>
-                <div>
-                    <h1 class="text-4xl md:text-5xl font-bold text-white">Lê Thái Thịnh</h1>
-                    <p class="text-xl font-medium text-green-500 mb-4">Thành viên | Thiết kế UI/UX</p>
-                    <p class="text-gray-400 mb-4">
-                      Mô tả ngắn về bản thân hoặc một câu nói tâm đắc.
-                    </p>
-                    <div class="flex items-center space-x-4 mb-6">
-                        <a href="#" class="text-gray-400 hover:text-green-500 transition-colors text-2xl"><i class="fa-brands fa-github"></i></a>
-                        <a href="#" class="text-gray-400 hover:text-green-500 transition-colors text-2xl"><i class="fa-brands fa-facebook"></i></a>
-                    </div>
-                    <a href="cv/thinh-cv.pdf" download class="btn-download inline-block bg-green-600 text-white font-bold py-3 px-8 hover:bg-green-500 transition-all duration-300">
-                        <i class="fa-solid fa-download mr-2"></i> TẢI CV
-                    </a>
-                </div>
-            </div>
-             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-12">
-                <div class="lg:col-span-1 space-y-8">
-                    <div class="tech-card p-6">
-                        <h3 class="text-2xl font-bold text-white mb-4"><i class="fa-solid fa-id-card mr-2 text-green-500"></i>Thông Tin Cá Nhân</h3>
-                        <ul class="space-y-2 text-gray-300">
-                            <li><strong>Mã số SV:</strong> <span>24050130</span></li>
-                            <li><strong>Quê quán:</strong> <span>Bình Dương</span></li>
-                            <li><strong>Liên lạc:</strong> <span>thaithinh@email.com</span></li>
-                        </ul>
-                    </div>
-                    <div class="tech-card p-6">
-                        <h3 class="text-2xl font-bold text-white mb-4"><i class="fa-solid fa-grin-stars mr-2 text-green-500"></i>Sở Thích</h3>
-                        <div class="flex flex-wrap gap-2">
-                           <span class="bg-gray-700/50 border border-gray-600 text-gray-300 px-3 py-1 rounded-full text-sm">Chơi game</span>
-                           <span class="bg-gray-700/50 border border-gray-600 text-gray-300 px-3 py-1 rounded-full text-sm">Mô hình</span>
-                           <span class="bg-gray-700/50 border border-gray-600 text-gray-300 px-3 py-1 rounded-full text-sm">Anime</span>
-                           <span class="bg-gray-700/50 border border-gray-600 text-gray-300 px-3 py-1 rounded-full text-sm">Ăn uống</span>
-                        </div>
-                    </div>
-                     <div class="tech-card p-6">
-                        <h3 class="text-2xl font-bold text-white mb-4"><i class="fa-solid fa-gears mr-2 text-green-500"></i>Chuyên Môn & Kỹ Năng</h3>
-                        <div id="thinh-skills-list" class="flex flex-wrap gap-3 mb-4 min-h-[40px]">
-                            <span data-skill-id="react" class="skill-badge bg-gray-800 text-gray-200 font-semibold px-4 py-2 flex items-center gap-2"><i class="fa-brands fa-react text-xl text-cyan-500"></i> React</span>
-                           <span data-skill-id="uiux" class="skill-badge bg-gray-800 text-gray-200 font-semibold px-4 py-2 flex items-center gap-2"><i class="fa-solid fa-pen-ruler text-xl text-yellow-500"></i> UI/UX Design</span>
-                         </div>
-                        <button data-target="thinh-skills-list" class="open-skill-modal-btn w-full text-left bg-green-900/50 p-3 rounded-md hover:bg-green-800/50 transition-colors flex justify-between items-center">
-                            <span>Chỉnh sửa kỹ năng</span>
-                            <i class="fa-solid fa-pencil"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="lg:col-span-2 space-y-8">
-                     <div class="tech-card p-6">
-                        <h3 class="text-2xl font-bold text-white mb-4"><i class="fa-solid fa-bullseye mr-2 text-green-500"></i>Dự Án Đã Thực Hiện</h3>
-                        <div class="space-y-6">
-                            <div class="border-l-4 border-sky-500 pl-4">
-                                <h4 class="text-lg font-bold text-white">Dự án: PORTFOLIO NHÓM</h4>
-                                <p class="text-sm text-gray-400 mb-2">Xây dựng trang web giới thiệu các thành viên và sản phẩm của nhóm.</p>
-                                <a href="#" class="text-sky-400 hover:text-red-500 transition-colors">Xem chi tiết &rarr;</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="tech-card p-6">
-                        <h3 class="text-2xl font-bold text-white mb-4"><i class="fa-solid fa-heart mr-2 text-green-500"></i>Lời Cảm Ơn</h3>
-                        <p class="text-gray-300 leading-relaxed">
-                           Để hoàn thành được trang web portfolio này, chúng em xin gửi lời cảm ơn sâu sắc nhất đến giảng viên hướng dẫn, thầy <strong>Đức Trần Thịnh Mạnh</strong>. Thầy không chỉ truyền đạt những kiến thức nền tảng quý báu về Thiết kế Web mà còn luôn tận tình chỉ dẫn, giải đáp mọi thắc mắc và định hướng cho chúng em trong suốt quá trình thực hiện dự án. Sự nhiệt huyết và chuyên môn của thầy chính là nguồn động lực lớn để chúng em vượt qua khó khăn và hoàn thiện sản phẩm này.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- PORTFOLIO: TRẦN VĂN ĐÌNH -->
-        <section id="dinh" class="page">
-            <div class="flex flex-col md:flex-row items-center gap-8 md:gap-12 tech-card p-8">
-                <div class="flex-shrink-0 w-48 h-48 md:w-60 md:h-60">
-                     <img src="image/Dinh.png" alt="Trần Văn Đình" class="w-full h-full rounded-full object-cover border-8 border-gray-700 shadow-lg">
-                </div>
-                <div>
-                    <h1 class="text-4xl md:text-5xl font-bold text-white">Trần Văn Đình</h1>
-                    <p class="text-xl font-medium text-yellow-400 mb-4">Thành viên | Lập trình viên Backend</p>
-                    <p class="text-gray-400 mb-4">
-                        Mô tả ngắn về bản thân hoặc một câu nói tâm đắc.
-                    </p>
-                    <div class="flex items-center space-x-4 mb-6">
-                        <a href="#" class="text-gray-400 hover:text-yellow-400 transition-colors text-2xl"><i class="fa-brands fa-github"></i></a>
-                        <a href="#" class="text-gray-400 hover:text-yellow-400 transition-colors text-2xl"><i class="fa-brands fa-facebook"></i></a>
-                    </div>
-                    <a href="cv/dinh-cv.pdf" download class="btn-download inline-block bg-yellow-500 text-black font-bold py-3 px-8 hover:bg-yellow-400 transition-all duration-300">
-                        <i class="fa-solid fa-download mr-2"></i> TẢI CV
-                    </a>
-                </div>
-            </div>
-             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-12">
-                <div class="lg:col-span-1 space-y-8">
-                    <div class="tech-card p-6">
-                        <h3 class="text-2xl font-bold text-white mb-4"><i class="fa-solid fa-id-card mr-2 text-yellow-400"></i>Thông Tin Cá Nhân</h3>
-                        <ul class="space-y-2 text-gray-300">
-                           <li><strong>Mã số SV:</strong> <span>24050115</span></li>
-                           <li><strong>Quê quán:</strong> <span>Bình Phước</span></li>
-                           <li><strong>Liên lạc:</strong> <span>24050115@student.bdu.edu.vn</span></li>
-                        </ul>
-                    </div>
-                    <div class="tech-card p-6">
-                        <h3 class="text-2xl font-bold text-white mb-4"><i class="fa-solid fa-grin-stars mr-2 text-yellow-400"></i>Sở Thích</h3>
-                        <div class="flex flex-wrap gap-2">
-                           <span class="bg-gray-700/50 border border-gray-600 text-gray-300 px-3 py-1 rounded-full text-sm">Chơi game</span>
-                           <span class="bg-gray-700/50 border border-gray-600 text-gray-300 px-3 py-1 rounded-full text-sm">Lập trình</span>
-                           <span class="bg-gray-700/50 border border-gray-600 text-gray-300 px-3 py-1 rounded-full text-sm">Du lịch</span>
-                           <span class="bg-gray-700/50 border border-gray-600 text-gray-300 px-3 py-1 rounded-full text-sm">Nghe nhạc</span>
-                        </div>
-                    </div>
-                     <div class="tech-card p-6">
-                        <h3 class="text-2xl font-bold text-white mb-4"><i class="fa-solid fa-gears mr-2 text-yellow-400"></i>Chuyên Môn & Kỹ Năng</h3>
-                        <div id="dinh-skills-list" class="flex flex-wrap gap-3 mb-4 min-h-[40px]">
-                            <span data-skill-id="figma" class="skill-badge bg-gray-800 text-gray-200 font-semibold px-4 py-2 flex items-center gap-2"><i class="fa-brands fa-figma text-xl text-pink-500"></i> Figma</span>
-                           <span data-skill-id="nodejs" class="skill-badge bg-gray-800 text-gray-200 font-semibold px-4 py-2 flex items-center gap-2"><i class="fa-brands fa-node-js text-xl text-green-500"></i> Node.js</span>
-                         </div>
-                        <button data-target="dinh-skills-list" class="open-skill-modal-btn w-full text-left bg-yellow-900/50 p-3 rounded-md hover:bg-yellow-800/50 transition-colors flex justify-between items-center">
-                            <span>Chỉnh sửa kỹ năng</span>
-                            <i class="fa-solid fa-pencil"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="lg:col-span-2 space-y-8">
-                     <div class="tech-card p-6">
-                        <h3 class="text-2xl font-bold text-white mb-4"><i class="fa-solid fa-bullseye mr-2 text-yellow-400"></i>Dự Án Đã Thực Hiện</h3>
-                        <div class="space-y-6">
-                            <div class="border-l-4 border-sky-500 pl-4">
-                                <h4 class="text-lg font-bold text-white">Dự án: PORTFOLIO NHÓM</h4>
-                                <p class="text-sm text-gray-400 mb-2">Xây dựng trang web giới thiệu các thành viên và sản phẩm của nhóm.</p>
-                                <a href="#" class="text-sky-400 hover:text-red-500 transition-colors">Xem chi tiết &rarr;</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="tech-card p-6">
-                        <h3 class="text-2xl font-bold text-white mb-4"><i class="fa-solid fa-heart mr-2 text-yellow-400"></i>Lời Cảm Ơn</h3>
-                        <p class="text-gray-300 leading-relaxed">
-                           Để hoàn thành được trang web portfolio này, chúng em xin gửi lời cảm ơn sâu sắc nhất đến giảng viên hướng dẫn, thầy <strong>Đức Trần Thịnh Mạnh</strong>. Thầy không chỉ truyền đạt những kiến thức nền tảng quý báu về Thiết kế Web mà còn luôn tận tình chỉ dẫn, giải đáp mọi thắc mắc và định hướng cho chúng em trong suốt quá trình thực hiện dự án. Sự nhiệt huyết và chuyên môn của thầy chính là nguồn động lực lớn để chúng em vượt qua khó khăn và hoàn thiện sản phẩm này.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-        
-        <!-- PORTFOLIO: LÊ QUỐC THẮNG -->
-        <section id="thang" class="page">
-             <div class="flex flex-col md:flex-row items-center gap-8 md:gap-12 tech-card p-8">
-                 <div class="flex-shrink-0 w-48 h-48 md:w-60 md:h-60">
-                     <img src="image/Thắng.jpg" alt="Lê Quốc Thắng" class="w-full h-full rounded-full object-cover border-8 border-gray-700 shadow-lg">
-                </div>
-                <div>
-                    <h1 class="text-4xl md:text-5xl font-bold text-white">Lê Quốc Thắng</h1>
-                    <p class="text-xl font-medium text-purple-500 mb-4">Thành viên | DevOps</p>
-                    <p class="text-gray-400 mb-4">
-                       Mô tả ngắn về bản thân hoặc một câu nói tâm đắc.
-                    </p>
-                    <div class="flex items-center space-x-4 mb-6">
-                        <a href="#" class="text-gray-400 hover:text-purple-500 transition-colors text-2xl"><i class="fa-brands fa-github"></i></a>
-                        <a href="#" class="text-gray-400 hover:text-purple-500 transition-colors text-2xl"><i class="fa-brands fa-facebook"></i></a>
-                    </div>
-                    <a href="cv/thang-cv.pdf" download class="btn-download inline-block bg-purple-600 text-white font-bold py-3 px-8 hover:bg-purple-500 transition-all duration-300">
-                        <i class="fa-solid fa-download mr-2"></i> TẢI CV
-                    </a>
-                </div>
-            </div>
-             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-12">
-                <div class="lg:col-span-1 space-y-8">
-                    <div class="tech-card p-6">
-                        <h3 class="text-2xl font-bold text-white mb-4"><i class="fa-solid fa-id-card mr-2 text-purple-500"></i>Thông Tin Cá Nhân</h3>
-                        <ul class="space-y-2 text-gray-300">
-                            <li><strong>Mã số SV:</strong> <span>24050129</span></li>
-                            <li><strong>Quê quán:</strong> <span>Tây Ninh</span></li>
-                            <li><strong>Liên lạc:</strong> <span>24050129@student.bdu.edu.vn</span></li>
-                        </ul>
-                    </div>
-                    <div class="tech-card p-6">
-                        <h3 class="text-2xl font-bold text-white mb-4"><i class="fa-solid fa-grin-stars mr-2 text-purple-500"></i>Sở Thích</h3>
-                        <div class="flex flex-wrap gap-2">
-                           <span class="bg-gray-700/50 border border-gray-600 text-gray-300 px-3 py-1 rounded-full text-sm">Nghe nhạc</span>
-                           <span class="bg-gray-700/50 border border-gray-600 text-gray-300 px-3 py-1 rounded-full text-sm">Thể thao</span>
-                        </div>
-                    </div>
-                     <div class="tech-card p-6">
-                        <h3 class="text-2xl font-bold text-white mb-4"><i class="fa-solid fa-gears mr-2 text-purple-500"></i>Chuyên Môn & Kỹ Năng</h3>
-                         <div id="thang-skills-list" class="flex flex-wrap gap-3 mb-4 min-h-[40px]">
-                            <span data-skill-id="doker" class="skill-badge bg-gray-800 text-gray-200 font-semibold px-4 py-2 flex items-center gap-2"><i class="fa-brands fa-docker text-xl text-sky-500"></i> Docker</span>
-                           <span data-skill-id="js" class="skill-badge bg-gray-800 text-gray-200 font-semibold px-4 py-2 flex items-center gap-2"><i class="fa-brands fa-js text-xl text-yellow-500"></i> JavaScript</span>
-                         </div>
-                        <button data-target="thang-skills-list" class="open-skill-modal-btn w-full text-left bg-purple-900/50 p-3 rounded-md hover:bg-purple-800/50 transition-colors flex justify-between items-center">
-                            <span>Chỉnh sửa kỹ năng</span>
-                            <i class="fa-solid fa-pencil"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="lg:col-span-2 space-y-8">
-                     <div class="tech-card p-6">
-                        <h3 class="text-2xl font-bold text-white mb-4"><i class="fa-solid fa-bullseye mr-2 text-purple-500"></i>Dự Án Đã Thực Hiện</h3>
-                        <div class="space-y-6">
-                            <div class="border-l-4 border-sky-500 pl-4">
-                                <h4 class="text-lg font-bold text-white">Dự án: PORTFOLIO NHÓM</h4>
-                                <p class="text-sm text-gray-400 mb-2">Xây dựng trang web giới thiệu các thành viên và sản phẩm của nhóm.</p>
-                                <a href="#" class="text-sky-400 hover:text-red-500 transition-colors">Xem chi tiết &rarr;</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="tech-card p-6">
-                        <h3 class="text-2xl font-bold text-white mb-4"><i class="fa-solid fa-heart mr-2 text-purple-500"></i>Lời Cảm Ơn</h3>
-                        <p class="text-gray-300 leading-relaxed">
-                           Để hoàn thành được trang web portfolio này, chúng em xin gửi lời cảm ơn sâu sắc nhất đến giảng viên hướng dẫn, thầy <strong>Đức Trần Thịnh Mạnh</strong>. Thầy không chỉ truyền đạt những kiến thức nền tảng quý báu về Thiết kế Web mà còn luôn tận tình chỉ dẫn, giải đáp mọi thắc mắc và định hướng cho chúng em trong suốt quá trình thực hiện dự án. Sự nhiệt huyết và chuyên môn của thầy chính là nguồn động lực lớn để chúng em vượt qua khó khăn và hoàn thiện sản phẩm này.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
     </main>
     
-    <!-- Skill Selection Modal -->
-    <div id="skill-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
-        <div id="skill-modal-backdrop" class="fixed inset-0 bg-black/70"></div>
+    <!-- MODALS -->
+    <div id="skill-modal" class="modal fixed inset-0 z-50 hidden items-center justify-center p-4">
+        <div class="modal-backdrop fixed inset-0"></div>
         <div class="tech-card relative w-full max-w-4xl max-h-[80vh] flex flex-col">
             <div class="p-6 border-b border-sky-500/30 flex justify-between items-center">
                  <h3 class="text-2xl font-bold text-white">Chọn Kỹ Năng</h3>
-                 <button id="close-skill-modal-btn" class="text-gray-400 hover:text-white transition-colors text-2xl">&times;</button>
+                 <button class="modal-close-btn text-gray-400 hover:text-white transition-colors text-2xl">&times;</button>
             </div>
-            <div id="skill-modal-list" class="p-6 overflow-y-auto">
-                <!-- Skills will be populated here by JavaScript -->
-            </div>
+            <div id="skill-modal-list" class="p-6 overflow-y-auto"></div>
             <div class="p-6 border-t border-sky-500/30 text-right">
-                <button id="save-skills-btn" class="btn-download inline-block bg-sky-600 text-white font-bold py-3 px-8 hover:bg-sky-500 transition-all duration-300">
+                <button id="save-skills-btn" class="interactive-sound btn-download inline-block bg-sky-600 text-white font-bold py-3 px-8 hover:bg-sky-500 transition-all duration-300">
                     Xác Nhận
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="project-modal" class="modal fixed inset-0 z-50 hidden items-center justify-center p-4">
+        <div class="modal-backdrop fixed inset-0"></div>
+        <div class="tech-card relative w-full max-w-4xl max-h-[80vh] flex flex-col">
+            <div class="p-6 border-b border-sky-500/30 flex justify-between items-center">
+                 <h3 id="project-modal-title" class="text-2xl font-bold text-white"></h3>
+                 <button class="modal-close-btn text-gray-400 hover:text-white transition-colors text-2xl">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <img id="project-modal-image" src="" alt="Project Image" class="w-full h-64 object-cover rounded-lg mb-4">
+                <p id="project-modal-description" class="text-gray-300 leading-relaxed"></p>
             </div>
         </div>
     </div>
@@ -589,58 +353,90 @@
             });
             showPage(window.location.hash || '#home');
             
-            // --- Skill Selection Modal Logic ---
-            const SKILLS_DATABASE = {
-                'Frontend': [
-                    { id: 'html', name: 'HTML5', icon: '<i class="fa-brands fa-html5 text-xl text-orange-500"></i>' },
-                    { id: 'css', name: 'CSS3', icon: '<i class="fa-brands fa-css3-alt text-xl text-sky-500"></i>' },
-                    { id: 'js', name: 'JavaScript', icon: '<i class="fa-brands fa-js text-xl text-yellow-400"></i>' },
-                    { id: 'react', name: 'React', icon: '<i class="fa-brands fa-react text-xl text-cyan-400"></i>' },
-                ],
-                'Backend': [
-                    { id: 'nodejs', name: 'Node.js', icon: '<i class="fa-brands fa-node-js text-xl text-green-500"></i>' },
-                    { id: 'sql', name: 'SQL', icon: '<i class="fa-solid fa-database text-xl text-sky-400"></i>' },
-                ],
-                'Design': [
-                     { id: 'figma', name: 'Figma', icon: '<i class="fa-brands fa-figma text-xl text-pink-500"></i>' },
-                     { id: 'uiux', name: 'UI/UX Design', icon: '<i class="fa-solid fa-pen-ruler text-xl text-yellow-500"></i>' },
-                ],
-                'Công cụ': [
-                    { id: 'git', name: 'Git', icon: '<i class="fa-brands fa-git-alt text-xl text-orange-600"></i>' },
-                    { id: 'docker', name: 'Docker', icon: '<i class="fa-brands fa-docker text-xl text-sky-500"></i>' },
-                ]
-            };
+            // --- WOW EFFECT 1: TYPING EFFECT ---
+            if (document.getElementById('typing-title')) {
+                new Typed('#typing-title', {
+                    strings: ['DANH SÁCH THÀNH VIÊN'],
+                    typeSpeed: 100,
+                    backSpeed: 50,
+                    loop: true,
+                    backDelay: 2000,
+                    showCursor: false, 
+                });
+            }
 
+            // --- WOW EFFECT 2: SOUND EFFECTS ---
+            const clickSound = new Tone.MembraneSynth().toDestination();
+
+            // SỬA LỖI: Thêm class "interactive-sound" vào tất cả các phần tử cần có âm thanh
+            document.querySelectorAll('.interactive-sound').forEach(elem => {
+                elem.addEventListener('click', () => {
+                    Tone.start(); // Start audio context on user interaction
+                    clickSound.triggerAttackRelease('C2', '8n');
+                });
+            });
+
+            // --- WOW EFFECT 3: PROJECT MODAL ---
+            const PROJECTS_DATABASE = {
+                'portfolio': {
+                    title: 'Dự án: Xây dựng trang web giới thiệu các thành viên và sản phẩm của nhóm',
+                    image: 'image/AnhBiaTC.jpg',
+                    description: 'Đây là dự án đầu tay của nhóm trong môn học Thiết kế Web. Mục tiêu là xây dựng một trang web portfolio chuyên nghiệp, giới thiệu đầy đủ thông tin, kỹ năng và các sản phẩm của từng thành viên. Trang web được thiết kế theo chủ đề Gundam, sử dụng các công nghệ HTML5, CSS3 với TailwindCSS và JavaScript để tạo ra các hiệu ứng tương tác độc đáo.'
+                }
+            };
+            const projectModal = document.getElementById('project-modal');
+            document.querySelectorAll('.project-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const projectId = item.dataset.projectId;
+                    const projectData = PROJECTS_DATABASE[projectId];
+                    if (projectData) {
+                        document.getElementById('project-modal-title').innerText = projectData.title;
+                        document.getElementById('project-modal-image').src = projectData.image;
+                        document.getElementById('project-modal-description').innerText = projectData.description;
+                        projectModal.classList.remove('hidden');
+                        projectModal.classList.add('flex');
+                    }
+                });
+            });
+            
+            // --- General Modal Closing Logic ---
+            document.querySelectorAll('.modal').forEach(modal => {
+                const backdrop = modal.querySelector('.modal-backdrop');
+                const closeBtn = modal.querySelector('.modal-close-btn');
+                if(backdrop) {
+                    backdrop.addEventListener('click', () => {
+                        modal.classList.add('hidden');
+                        modal.classList.remove('flex');
+                    });
+                }
+                if(closeBtn) {
+                     closeBtn.addEventListener('click', () => {
+                        modal.classList.add('hidden');
+                        modal.classList.remove('flex');
+                    });
+                }
+            });
+
+            // --- Skill Selection Modal Logic ---
+            const SKILLS_DATABASE = { 'Frontend': [ { id: 'html', name: 'HTML5', icon: '<i class="fa-brands fa-html5 text-xl text-orange-500"></i>' }, { id: 'css', name: 'CSS3', icon: '<i class="fa-brands fa-css3-alt text-xl text-sky-500"></i>' }, { id: 'js', name: 'JavaScript', icon: '<i class="fa-brands fa-js text-xl text-yellow-400"></i>' }, { id: 'react', name: 'React', icon: '<i class="fa-brands fa-react text-xl text-cyan-400"></i>' }, ], 'Backend': [ { id: 'nodejs', name: 'Node.js', icon: '<i class="fa-brands fa-node-js text-xl text-green-500"></i>' }, { id: 'sql', name: 'SQL', icon: '<i class="fa-solid fa-database text-xl text-sky-400"></i>' }, ], 'Design': [ { id: 'figma', name: 'Figma', icon: '<i class="fa-brands fa-figma text-xl text-pink-500"></i>' }, { id: 'uiux', name: 'UI/UX Design', icon: '<i class="fa-solid fa-pen-ruler text-xl text-yellow-500"></i>' }, ], 'Công cụ': [ { id: 'git', name: 'Git', icon: '<i class="fa-brands fa-git-alt text-xl text-orange-600"></i>' }, { id: 'docker', name: 'Docker', icon: '<i class="fa-brands fa-docker text-xl text-sky-500"></i>' }, ] };
             const skillModal = document.getElementById('skill-modal');
             const skillModalList = document.getElementById('skill-modal-list');
-            const closeModalBtn = document.getElementById('close-skill-modal-btn');
-            const modalBackdrop = document.getElementById('skill-modal-backdrop');
             const saveSkillsBtn = document.getElementById('save-skills-btn');
             const openModalButtons = document.querySelectorAll('.open-skill-modal-btn');
             let currentSkillTarget = null;
-
             function populateModal() {
-                skillModalList.innerHTML = ''; // Clear previous content
-                
-                const currentlySelectedIds = Array.from(currentSkillTarget.querySelectorAll('.skill-badge'))
-                                                  .map(badge => badge.dataset.skillId);
-
+                skillModalList.innerHTML = ''; 
+                const currentlySelectedIds = Array.from(currentSkillTarget.querySelectorAll('.skill-badge')).map(badge => badge.dataset.skillId);
                 for (const category in SKILLS_DATABASE) {
                     let categoryHtml = `<h4 class="text-lg font-bold text-sky-400 mb-2 mt-4">${category}</h4><div class="flex flex-wrap gap-3">`;
                     SKILLS_DATABASE[category].forEach(skill => {
                         const isSelected = currentlySelectedIds.includes(skill.id);
-                        categoryHtml += `
-                            <div data-skill-id="${skill.id}" class="skill-item p-3 rounded-md cursor-pointer flex items-center gap-2 ${isSelected ? 'selected' : ''}">
-                                ${skill.icon}
-                                <span class="font-semibold">${skill.name}</span>
-                            </div>
-                        `;
+                        categoryHtml += `<div data-skill-id="${skill.id}" class="skill-item p-3 rounded-md cursor-pointer flex items-center gap-2 ${isSelected ? 'selected' : ''}">${skill.icon}<span class="font-semibold">${skill.name}</span></div>`;
                     });
                     categoryHtml += `</div>`;
                     skillModalList.innerHTML += categoryHtml;
                 }
             }
-            
             openModalButtons.forEach(button => {
                 button.addEventListener('click', () => {
                     currentSkillTarget = document.getElementById(button.dataset.target);
@@ -649,46 +445,28 @@
                     skillModal.classList.add('flex');
                 });
             });
-
-            function closeModal() {
-                skillModal.classList.add('hidden');
-                skillModal.classList.remove('flex');
-                currentSkillTarget = null;
-            }
-
-            closeModalBtn.addEventListener('click', closeModal);
-            modalBackdrop.addEventListener('click', closeModal);
-
+            // SỬA LỖI: Đảm bảo có thể chọn được kỹ năng
             skillModalList.addEventListener('click', (e) => {
                 const skillItem = e.target.closest('.skill-item');
-                if (skillItem) {
-                    skillItem.classList.toggle('selected');
-                }
+                if (skillItem) { skillItem.classList.toggle('selected'); }
             });
-
             saveSkillsBtn.addEventListener('click', () => {
                 if (!currentSkillTarget) return;
-
                 let newSkillsHtml = '';
                 const selectedItems = skillModalList.querySelectorAll('.skill-item.selected');
-                
                 selectedItems.forEach(item => {
                     const skillId = item.dataset.skillId;
-                    
                     for (const category in SKILLS_DATABASE) {
                        const foundSkill = SKILLS_DATABASE[category].find(s => s.id === skillId);
                        if (foundSkill) {
-                           newSkillsHtml += `
-                            <span data-skill-id="${foundSkill.id}" class="skill-badge bg-gray-800 text-gray-200 font-semibold px-4 py-2 flex items-center gap-2">
-                                ${foundSkill.icon} ${foundSkill.name}
-                            </span>`;
+                           newSkillsHtml += `<span data-skill-id="${foundSkill.id}" class="skill-badge bg-gray-800 text-gray-200 font-semibold px-4 py-2 flex items-center gap-2">${foundSkill.icon} ${foundSkill.name}</span>`;
                            break;
                        }
                     }
                 });
-
                 currentSkillTarget.innerHTML = newSkillsHtml || '<p class="text-gray-500">Chưa có kỹ năng nào được chọn.</p>';
-                closeModal();
+                skillModal.classList.add('hidden');
+                skillModal.classList.remove('flex');
             });
         });
     </script>
